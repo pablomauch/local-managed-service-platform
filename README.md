@@ -12,10 +12,28 @@ No Docker. No WSL. No Linux-only tools.
 
 ---
 
+## Architecture
+
+The app runs as a **single Next.js process on `http://localhost:3000`**.
+API routes are served by the same process under `/api`.
+There is no separate backend running on `localhost:4000` or any other port.
+
+| What | Where |
+|------|-------|
+| Application (UI + API) | `http://localhost:3000` |
+| All API endpoints | `http://localhost:3000/api` |
+| PostgreSQL | local service, started manually with `pg_ctl` |
+
+PostgreSQL is the only separate local process. It must be running before you
+start the app or run migrations.
+
+See [`docs/architecture.md`](docs/architecture.md) for full architectural notes.
+
+---
+
 ## PostgreSQL: start and stop manually
 
-PostgreSQL is started manually with `pg_ctl`. Replace `C:\pg-data` with the
-actual path to your PostgreSQL data directory.
+Replace `C:\pg-data` with the actual path to your PostgreSQL data directory.
 
 ### PowerShell
 
@@ -37,26 +55,9 @@ pg_ctl start -D "C:\pg-data" -l "C:\pg-data\postgres.log"
 pg_ctl stop -D "C:\pg-data"
 ```
 
-PostgreSQL must be running before you start the application or run migrations.
-
 ---
 
-## Architecture
-
-The app runs as a **single process on `http://localhost:3000`**. There is no
-separate backend server on another port. API routes are served from the same
-process under `/api`:
-
-| Base URL | Purpose |
-|----------|---------|
-| `http://localhost:3000` | Application (UI + API) |
-| `http://localhost:3000/api` | All API endpoints |
-
-PostgreSQL runs separately as a local service started manually with `pg_ctl`.
-
----
-
-## Quick start (Windows PowerShell)
+## Quick start (Windows)
 
 ### 1. Clone and enter the repository
 
@@ -89,18 +90,20 @@ Open `.env.local` in any text editor and replace `CHANGE_ME` with your actual
 PostgreSQL password. All other defaults match a standard local PostgreSQL install.
 
 ```
-DATABASE_HOST=localhost
-DATABASE_PORT=5432
-DATABASE_NAME=managed_service_local
-DATABASE_USER=app_user
 DATABASE_PASSWORD=your_real_password_here
+DATABASE_URL=postgresql://app_user:your_real_password_here@localhost:5432/managed_service_local
 ```
 
-> **Important:** `.env.local` must never be uploaded to GitHub.
-> It is already listed in `.gitignore` and will not be committed accidentally.
-> Real passwords and client data must stay only on your local PC.
+> **`.env.local` must never be committed or uploaded to GitHub.**
+> It is listed in `.gitignore` and will not be staged accidentally.
+> Real passwords must only exist in `.env.local` on your local PC.
 
-### 4. Run database migrations
+### 4. Start PostgreSQL
+
+Start PostgreSQL manually with `pg_ctl` (see the section above) before
+continuing. PostgreSQL must be running for migrations and for the app to start.
+
+### 5. Run database migrations
 
 ```powershell
 npm run db:migrate
@@ -113,7 +116,7 @@ Migration complete.
 Database: localhost:5432/managed_service_local
 ```
 
-### 5. Start the development server
+### 6. Start the development server
 
 ```powershell
 npm run dev
@@ -154,20 +157,26 @@ Click **Check health** — you should see:
 
 ## Environment variables
 
+All configuration is read from `.env.local` at startup. Never commit `.env.local`.
+See `.env.example` for the full list of supported variables with placeholder values.
+
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `PORT` | `3000` | Port the server listens on |
-| `APP_URL` | `http://localhost:3000` | Full URL of the app (no trailing slash) |
+| `APP_URL` | `http://localhost:3000` | Full URL of the app |
+| `FRONTEND_PORT` | `3000` | Frontend port |
+| `FRONTEND_URL` | `http://localhost:3000` | Frontend URL |
+| `BACKEND_PORT` | `3000` | Backend port (same process as frontend) |
+| `BACKEND_URL` | `http://localhost:3000` | Backend URL (same process as frontend) |
 | `NEXT_PUBLIC_API_URL` | `/api` | API base path used by the frontend |
 | `DATABASE_HOST` | `localhost` | PostgreSQL host |
 | `DATABASE_PORT` | `5432` | PostgreSQL port |
 | `DATABASE_NAME` | — | Database name (required) |
 | `DATABASE_USER` | — | Database user |
-| `DATABASE_PASSWORD` | — | Database password |
+| `DATABASE_PASSWORD` | — | Database password — set in `.env.local` only |
 | `DATABASE_URL` | — | Full connection URL (overrides individual vars) |
 | `LLM_PROVIDER` | `disabled` | AI provider — keep as `disabled` |
-
-Configuration is read from `.env.local` at startup. Never commit `.env.local`.
+| `ALLOW_EXTERNAL_AI_CALLS` | `false` | Must stay `false` |
+| `ALLOW_EXTERNAL_REQUESTS` | `false` | Must stay `false` |
 
 ---
 
@@ -227,6 +236,7 @@ local-managed-service-platform/
 │   └── public/
 │       └── index.html     # Health check UI
 ├── docs/
+│   └── architecture.md    # Architecture notes
 ├── .env.example           # Safe placeholder values — commit this
 ├── .gitignore
 └── package.json
