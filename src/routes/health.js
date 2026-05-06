@@ -2,12 +2,23 @@ const express = require('express');
 const router = express.Router();
 const { getDb } = require('../db/connection');
 
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    getDb().prepare('SELECT 1').get();
-    res.json({ status: 'ok', db: 'connected', timestamp: new Date().toISOString() });
+    await getDb().query('SELECT 1');
+    res.json({
+      status: 'ok',
+      app: 'running',
+      db: 'connected',
+      ai: process.env.LLM_PROVIDER || 'disabled',
+      timestamp: new Date().toISOString(),
+    });
   } catch (err) {
-    res.status(503).json({ status: 'error', message: err.message });
+    res.status(503).json({
+      status: 'error',
+      app: 'running',
+      db: 'disconnected',
+      message: err.message,
+    });
   }
 });
 

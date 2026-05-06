@@ -1,17 +1,14 @@
-require('dotenv').config();
+require('dotenv').config({ path: '.env.local' });
 const express = require('express');
 const path = require('path');
-const fs = require('fs');
 
 const PORT = process.env.PORT || 3000;
-const STORAGE_PATH = process.env.STORAGE_PATH;
 
-if (!STORAGE_PATH) {
-  console.error('ERROR: STORAGE_PATH is not set. Copy .env.example to .env and set it.');
+if (!process.env.DATABASE_URL && !process.env.DATABASE_NAME) {
+  console.error('ERROR: Database is not configured.');
+  console.error('Copy .env.example to .env.local and set DATABASE_NAME (or DATABASE_URL).');
   process.exit(1);
 }
-
-fs.mkdirSync(STORAGE_PATH, { recursive: true });
 
 const app = express();
 
@@ -25,6 +22,9 @@ app.use('/api/documents', require('./routes/documents'));
 app.use('/api/tasks',     require('./routes/tasks'));
 
 app.listen(PORT, () => {
-  console.log('Server:  http://localhost:' + PORT);
-  console.log('Storage: ' + STORAGE_PATH);
+  const dbTarget = process.env.DATABASE_URL
+    ? '(from DATABASE_URL)'
+    : `${process.env.DATABASE_HOST || 'localhost'}:${process.env.DATABASE_PORT || 5432}/${process.env.DATABASE_NAME}`;
+  console.log('Server:   http://localhost:' + PORT);
+  console.log('Database: ' + dbTarget);
 });
