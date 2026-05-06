@@ -2,30 +2,61 @@
 
 Step-by-step startup and shutdown procedure for the local development environment.
 
-## Prerequisites
+---
 
-- Node.js v20 or later installed and on the PATH
-- PostgreSQL installed and on the PATH (`pg_ctl`, `psql` available in CMD)
-- Repository cloned to `C:\dev\managed-service-platform`
-- `.env.local` created from `.env.example` with real credentials (never committed)
-- PostgreSQL data directory exists (e.g. `C:\dev\pg-data`)
-- Runtime data directory exists: `C:\dev\managed-service-platform-data`
+## Local paths
+
+| What | Path |
+|------|------|
+| PostgreSQL installation | `C:\Program Files\PostgreSQL\18` |
+| PostgreSQL data directory | `C:\dev\managed-service-platform-data\postgres-data` |
+| PostgreSQL log file | `C:\dev\managed-service-platform-data\postgres-log.txt` |
+| Application directory | `C:\dev\managed-service-platform` |
 
 PostgreSQL is **not** configured as a Windows service. It must be started
 manually every session.
 
 ---
 
+## Desktop shortcuts
+
+Three shortcuts on the desktop cover the most common tasks.
+Each shortcut opens a CMD window that stays open (`cmd.exe /k`) so you can
+read the output after the command finishes.
+
+| Shortcut name | Script | Purpose |
+|---------------|--------|---------|
+| Iniciar Plataforma Local | `scripts\start-local.cmd` | Start PostgreSQL then the dev server |
+| Revisar Entorno Local | `scripts\check-local.cmd` | Validate Node, npm, pg_ctl, port, project folder |
+| Detener PostgreSQL Local | `scripts\stop-postgres.cmd` | Stop PostgreSQL |
+
+### How to create or recreate a shortcut
+
+1. Right-click the Desktop → **New → Shortcut**.
+2. Set the target to the appropriate line from the table below.
+3. Set the name to the shortcut name in the table above.
+4. Optionally set **Start in** to `C:\dev\managed-service-platform`.
+
+| Shortcut name | Target field |
+|---------------|-------------|
+| Iniciar Plataforma Local | `cmd.exe /k "C:\dev\managed-service-platform\scripts\start-local.cmd"` |
+| Revisar Entorno Local | `cmd.exe /k "C:\dev\managed-service-platform\scripts\check-local.cmd"` |
+| Detener PostgreSQL Local | `cmd.exe /k "C:\dev\managed-service-platform\scripts\stop-postgres.cmd"` |
+
+`cmd.exe /k` keeps the window open after the script finishes so you can read
+any warnings or errors. Do not use `cmd.exe /c` (that closes immediately).
+
+---
+
 ## Startup procedure
 
-Follow these steps in order. Do not skip steps.
+Follow these steps in order. The **Iniciar Plataforma Local** shortcut
+automates steps 1–4.
 
 ### Step 1 — Start PostgreSQL
 
-Open a Command Prompt and run:
-
 ```cmd
-pg_ctl start -D "C:\dev\pg-data" -l "C:\dev\pg-data\postgres.log"
+"C:\Program Files\PostgreSQL\18\bin\pg_ctl.exe" start -D "C:\dev\managed-service-platform-data\postgres-data" -l "C:\dev\managed-service-platform-data\postgres-log.txt"
 ```
 
 Expected output:
@@ -50,12 +81,12 @@ Expected output (one or more lines):
 ```
 
 If port 5432 does not appear, PostgreSQL did not start. Check the log at
-`C:\dev\pg-data\postgres.log` for errors before continuing.
+`C:\dev\managed-service-platform-data\postgres-log.txt` before continuing.
 
 ### Step 3 — Start the application
 
 ```cmd
-cd C:\dev\managed-service-platform
+cd /d C:\dev\managed-service-platform
 npm run dev
 ```
 
@@ -70,7 +101,7 @@ Leave this window open. The app runs in the foreground.
 
 ### Step 4 — Verify the health endpoint
 
-Open a second Command Prompt and run:
+Open a second CMD window and run:
 
 ```cmd
 curl -s http://localhost:3000/api/health
@@ -93,7 +124,7 @@ All four fields must match before the environment is considered healthy:
 | Field | Expected value | Meaning |
 |-------|---------------|---------|
 | `status` | `ok` | App started without errors |
-| `app` | `running` | Express / Next.js process is up |
+| `app` | `running` | Process is up |
 | `db` | `connected` | PostgreSQL connection succeeded |
 | `ai` | `disabled` | No external AI calls will be made |
 
@@ -110,8 +141,10 @@ In the window running `npm run dev`, press `Ctrl+C` and confirm if prompted.
 
 ### Step 2 — Stop PostgreSQL
 
+Use the **Detener PostgreSQL Local** shortcut, or run:
+
 ```cmd
-pg_ctl stop -D "C:\dev\pg-data"
+"C:\Program Files\PostgreSQL\18\bin\pg_ctl.exe" stop -D "C:\dev\managed-service-platform-data\postgres-data"
 ```
 
 Expected output:
@@ -131,37 +164,28 @@ Expected output: no lines. If lines still appear, wait a few seconds and retry.
 
 ---
 
-## Helper scripts
+## Helper scripts reference
 
-Three CMD scripts are provided in the `scripts\` folder. They are shortcuts —
-the manual steps above remain the authoritative procedure.
+| Script | What it does |
+|--------|-------------|
+| `scripts\start-local.cmd` | Starts PostgreSQL, waits, checks port 5432, then runs `npm run dev` |
+| `scripts\stop-postgres.cmd` | Stops PostgreSQL and verifies port 5432 is closed |
+| `scripts\check-local.cmd` | Checks Node.js, npm, pg_ctl, port 5432, project folder, package.json, .env.local, node_modules |
 
-| Script | Purpose |
-|--------|---------|
-| `scripts\start-local.cmd` | Start PostgreSQL, verify port, then start the app |
-| `scripts\stop-postgres.cmd` | Stop PostgreSQL |
-| `scripts\check-local.cmd` | Validate Node, npm, PostgreSQL port, project folder |
-
-Run them from the repository root or from any CMD window:
-
-```cmd
-scripts\start-local.cmd
-scripts\stop-postgres.cmd
-scripts\check-local.cmd
-```
+All scripts use absolute paths and can be run from any directory.
 
 ---
 
 ## Runtime data
 
-All PostgreSQL data is stored in the PostgreSQL data directory outside the
-repository. No runtime data is written inside `C:\dev\managed-service-platform`.
+All PostgreSQL data is stored outside the repository.
+No runtime data is written inside `C:\dev\managed-service-platform`.
 
 | What | Where |
 |------|-------|
-| PostgreSQL rows | inside the PostgreSQL data directory |
+| PostgreSQL rows | `C:\dev\managed-service-platform-data\postgres-data` |
+| PostgreSQL log | `C:\dev\managed-service-platform-data\postgres-log.txt` |
 | Application logs | console output only (no log files at this stage) |
-| Future file uploads | `C:\dev\managed-service-platform-data` |
 
 > Real client names, case data, and credentials must stay only on the local PC.
 > Never commit `.env.local`, database dumps, or any exported data to GitHub.
@@ -179,7 +203,7 @@ Copy `.env.example` to `.env.local` and fill in real values.
 
 - Confirm PostgreSQL is running: `netstat -an | findstr :5432`
 - Confirm `DATABASE_PASSWORD` in `.env.local` matches the PostgreSQL user password.
-- Check `C:\dev\pg-data\postgres.log` for PostgreSQL errors.
+- Check `C:\dev\managed-service-platform-data\postgres-log.txt` for errors.
 
 ### Port 3000 already in use
 
@@ -192,8 +216,8 @@ taskkill /PID <pid> /F
 
 Or change `PORT` in `.env.local` to a free port (e.g. `3001`).
 
-### pg_ctl not found
+### pg_ctl not found or wrong version
 
-PostgreSQL `bin` directory is not on the PATH.
-Add it in System Properties → Environment Variables → PATH,
-for example: `C:\Program Files\PostgreSQL\16\bin`
+Confirm PostgreSQL 18 is installed at `C:\Program Files\PostgreSQL\18`.
+The scripts call `pg_ctl.exe` using its full absolute path, so it does not
+need to be on the system PATH.

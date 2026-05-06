@@ -2,25 +2,24 @@
 :: ============================================================
 :: start-local.cmd
 :: Start PostgreSQL and the local development server.
-:: Can be run from any directory.
+:: Can be run from any directory or via a desktop shortcut.
 ::
-:: Usage:  scripts\start-local.cmd
-::         (or double-click from Explorer)
+:: Shortcut target:
+::   cmd.exe /k "C:\dev\managed-service-platform\scripts\start-local.cmd"
 ::
-:: Edit the paths in the CONFIG section below to match your machine.
 :: Do NOT put passwords in this file.
 :: ============================================================
 
 :: --- CONFIG --------------------------------------------------
-set PG_CTL=C:\Program Files\PostgreSQL\16\bin\pg_ctl.exe
-set PG_DATA=C:\dev\pg-data
-set PG_LOG=C:\dev\pg-data\postgres.log
+set PG_CTL=C:\Program Files\PostgreSQL\18\bin\pg_ctl.exe
+set PG_DATA=C:\dev\managed-service-platform-data\postgres-data
+set PG_LOG=C:\dev\managed-service-platform-data\postgres-log.txt
 set APP_DIR=C:\dev\managed-service-platform
 :: -------------------------------------------------------------
 
 echo.
 echo ============================================================
-echo  Local startup — managed-service-platform
+echo  Iniciar Plataforma Local
 echo ============================================================
 
 :: --- Step 1: Start PostgreSQL --------------------------------

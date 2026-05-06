@@ -2,31 +2,48 @@
 :: ============================================================
 :: stop-postgres.cmd
 :: Stop the local PostgreSQL instance.
+:: Can be run from any directory or via a desktop shortcut.
 ::
-:: Usage:  scripts\stop-postgres.cmd
+:: Shortcut target:
+::   cmd.exe /k "C:\dev\managed-service-platform\scripts\stop-postgres.cmd"
 ::
-:: Edit PG_DATA below to match your PostgreSQL data directory.
+:: Do NOT put passwords in this file.
 :: ============================================================
 
-set PG_DATA=C:\dev\pg-data
+:: --- CONFIG --------------------------------------------------
+set PG_CTL=C:\Program Files\PostgreSQL\18\bin\pg_ctl.exe
+set PG_DATA=C:\dev\managed-service-platform-data\postgres-data
+:: -------------------------------------------------------------
 
 echo.
-echo Stopping PostgreSQL (data dir: %PG_DATA%)...
-pg_ctl stop -D "%PG_DATA%"
+echo ============================================================
+echo  Detener PostgreSQL Local
+echo ============================================================
+
+echo.
+echo [1/2] Stopping PostgreSQL...
+echo       pg_ctl : "%PG_CTL%"
+echo       data   : %PG_DATA%
+echo.
+"%PG_CTL%" stop -D "%PG_DATA%"
 if errorlevel 1 (
     echo.
     echo NOTE: pg_ctl returned a non-zero exit code.
     echo       PostgreSQL may not have been running.
-    exit /b 1
 )
 
+:: --- Verify port 5432 is closed ------------------------------
 echo.
-echo Verifying port 5432 is closed...
+echo [2/2] Verifying port 5432 is closed...
 timeout /t 2 /nobreak >nul
 netstat -an | findstr :5432 >nul
 if errorlevel 1 (
-    echo Port 5432 is closed. PostgreSQL is stopped.
+    echo       Port 5432 is closed. PostgreSQL is stopped.
 ) else (
-    echo NOTE: Port 5432 is still listening. PostgreSQL may still be shutting down.
-    echo       Wait a few seconds and run this script again, or check Task Manager.
+    echo  NOTE: Port 5432 is still listening.
+    echo        PostgreSQL may still be shutting down.
+    echo        Wait a few seconds and run this script again if needed.
 )
+
+echo.
+pause
