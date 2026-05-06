@@ -41,6 +41,21 @@ PostgreSQL must be running before you start the application or run migrations.
 
 ---
 
+## Architecture
+
+The app runs as a **single process on `http://localhost:3000`**. There is no
+separate backend server on another port. API routes are served from the same
+process under `/api`:
+
+| Base URL | Purpose |
+|----------|---------|
+| `http://localhost:3000` | Application (UI + API) |
+| `http://localhost:3000/api` | All API endpoints |
+
+PostgreSQL runs separately as a local service started manually with `pg_ctl`.
+
+---
+
 ## Quick start (Windows PowerShell)
 
 ### 1. Clone and enter the repository
@@ -142,6 +157,8 @@ Click **Check health** — you should see:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PORT` | `3000` | Port the server listens on |
+| `APP_URL` | `http://localhost:3000` | Full URL of the app (no trailing slash) |
+| `NEXT_PUBLIC_API_URL` | `/api` | API base path used by the frontend |
 | `DATABASE_HOST` | `localhost` | PostgreSQL host |
 | `DATABASE_PORT` | `5432` | PostgreSQL port |
 | `DATABASE_NAME` | — | Database name (required) |
@@ -155,6 +172,8 @@ Configuration is read from `.env.local` at startup. Never commit `.env.local`.
 ---
 
 ## API endpoints
+
+All endpoints are served by the single app process at `http://localhost:3000/api`.
 
 | Method | Path | Description |
 |--------|------|-------------|
