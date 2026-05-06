@@ -5,9 +5,39 @@ Local managed service platform prototype — Windows lab scaffold.
 ## Prerequisites
 
 - [Node.js LTS](https://nodejs.org/) (v20 or later)
+- PostgreSQL installed and available on your PATH
 - Windows PowerShell or Command Prompt
 
 No Docker. No WSL. No Linux-only tools.
+
+---
+
+## PostgreSQL: start and stop manually
+
+PostgreSQL is started manually with `pg_ctl`. Replace `C:\pg-data` with the
+actual path to your PostgreSQL data directory.
+
+### PowerShell
+
+```powershell
+# Start
+pg_ctl start -D "C:\pg-data" -l "C:\pg-data\postgres.log"
+
+# Stop
+pg_ctl stop -D "C:\pg-data"
+```
+
+### Command Prompt (CMD)
+
+```cmd
+:: Start
+pg_ctl start -D "C:\pg-data" -l "C:\pg-data\postgres.log"
+
+:: Stop
+pg_ctl stop -D "C:\pg-data"
+```
+
+PostgreSQL must be running before you start the application or run migrations.
 
 ---
 
@@ -26,20 +56,34 @@ cd local-managed-service-platform
 npm install
 ```
 
-### 3. Configure environment
+### 3. Create your local environment file
+
+**PowerShell:**
 
 ```powershell
-Copy-Item .env.example .env
+Copy-Item .env.example .env.local
 ```
 
-Open `.env` in any text editor and set `STORAGE_PATH` to a folder **outside** the repository.
-The folder will be created automatically if it does not exist.
+**CMD:**
+
+```cmd
+copy .env.example .env.local
+```
+
+Open `.env.local` in any text editor and replace `CHANGE_ME` with your actual
+PostgreSQL password. All other defaults match a standard local PostgreSQL install.
 
 ```
-STORAGE_PATH=C:\managed-service-data
-PORT=3000
-NODE_ENV=development
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+DATABASE_NAME=managed_service_local
+DATABASE_USER=app_user
+DATABASE_PASSWORD=your_real_password_here
 ```
+
+> **Important:** `.env.local` must never be uploaded to GitHub.
+> It is already listed in `.gitignore` and will not be committed accidentally.
+> Real passwords and client data must stay only on your local PC.
 
 ### 4. Run database migrations
 
@@ -51,7 +95,7 @@ Expected output:
 
 ```
 Migration complete.
-Database: C:\managed-service-data\platform.db
+Database: localhost:5432/managed_service_local
 ```
 
 ### 5. Start the development server
@@ -63,12 +107,22 @@ npm run dev
 Expected output:
 
 ```
-Server:  http://localhost:3000
-Storage: C:\managed-service-data
+Server:   http://localhost:3000
+Database: localhost:5432/managed_service_local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.  
-Click **Check health** — you should see `{ "status": "ok", "db": "connected", ... }`.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+Click **Check health** — you should see:
+
+```json
+{
+  "status": "ok",
+  "app": "running",
+  "db": "connected",
+  "ai": "disabled",
+  "timestamp": "..."
+}
+```
 
 ---
 
@@ -80,6 +134,23 @@ Click **Check health** — you should see `{ "status": "ok", "db": "connected", 
 | `npm run build` | Syntax-check all source files |
 | `npm run db:migrate` | Create or update the database schema |
 | `npm start` | Start server without hot reload |
+
+---
+
+## Environment variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | `3000` | Port the server listens on |
+| `DATABASE_HOST` | `localhost` | PostgreSQL host |
+| `DATABASE_PORT` | `5432` | PostgreSQL port |
+| `DATABASE_NAME` | — | Database name (required) |
+| `DATABASE_USER` | — | Database user |
+| `DATABASE_PASSWORD` | — | Database password |
+| `DATABASE_URL` | — | Full connection URL (overrides individual vars) |
+| `LLM_PROVIDER` | `disabled` | AI provider — keep as `disabled` |
+
+Configuration is read from `.env.local` at startup. Never commit `.env.local`.
 
 ---
 
@@ -108,10 +179,11 @@ Click **Check health** — you should see `{ "status": "ok", "db": "connected", 
 
 ## Data storage
 
-All runtime data (SQLite database, future file uploads) is written to `STORAGE_PATH`.  
-This path must be **outside** the repository. It is never committed to source control.
+All runtime data is stored in PostgreSQL (`managed_service_local` database by
+default). The database runs locally on your PC and is never uploaded anywhere.
 
-The SQLite database file is `platform.db` inside `STORAGE_PATH`.
+> Real client names, case data, and documents must stay only on your local PC.
+> Never push database dumps or exports to GitHub.
 
 ---
 
@@ -124,7 +196,7 @@ local-managed-service-platform/
 ├── src/
 │   ├── server.js          # Express entry point
 │   ├── db/
-│   │   ├── connection.js  # SQLite singleton
+│   │   ├── connection.js  # PostgreSQL pool
 │   │   ├── migrate.js     # Migration runner
 │   │   └── schema.js      # Table definitions
 │   ├── routes/
@@ -136,7 +208,7 @@ local-managed-service-platform/
 │   └── public/
 │       └── index.html     # Health check UI
 ├── docs/
-├── .env.example
+├── .env.example           # Safe placeholder values — commit this
 ├── .gitignore
 └── package.json
 ```

@@ -1,16 +1,22 @@
-const path = require('path');
-const Database = require('better-sqlite3');
+const { Pool } = require('pg');
 
-let db;
+let pool;
 
 function getDb() {
-  if (!db) {
-    const dbPath = path.join(process.env.STORAGE_PATH, 'platform.db');
-    db = new Database(dbPath);
-    db.pragma('foreign_keys = ON');
-    db.pragma('journal_mode = WAL');
+  if (!pool) {
+    if (process.env.DATABASE_URL) {
+      pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    } else {
+      pool = new Pool({
+        host: process.env.DATABASE_HOST || 'localhost',
+        port: parseInt(process.env.DATABASE_PORT || '5432', 10),
+        database: process.env.DATABASE_NAME,
+        user: process.env.DATABASE_USER,
+        password: process.env.DATABASE_PASSWORD,
+      });
+    }
   }
-  return db;
+  return pool;
 }
 
 module.exports = { getDb };
