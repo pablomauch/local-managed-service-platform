@@ -2,6 +2,9 @@
 
 Local managed service platform prototype — Windows lab scaffold.
 
+For detailed startup and shutdown procedures see
+[`docs/local-runbook.md`](docs/local-runbook.md).
+
 ## Prerequisites
 
 - [Node.js LTS](https://nodejs.org/) (v20 or later)
@@ -220,7 +223,10 @@ default). The database runs locally on your PC and is never uploaded anywhere.
 ```
 local-managed-service-platform/
 ├── scripts/
-│   └── build.js          # Cross-platform syntax checker
+│   ├── build.js           # Cross-platform syntax checker
+│   ├── check-local.cmd    # Validate local environment (Node, npm, pg, folder)
+│   ├── start-local.cmd    # Start PostgreSQL then the dev server
+│   └── stop-postgres.cmd  # Stop PostgreSQL
 ├── src/
 │   ├── server.js          # Express entry point
 │   ├── db/
@@ -236,7 +242,8 @@ local-managed-service-platform/
 │   └── public/
 │       └── index.html     # Health check UI
 ├── docs/
-│   └── architecture.md    # Architecture notes
+│   ├── architecture.md    # Architecture notes
+│   └── local-runbook.md   # Startup and shutdown procedure
 ├── .env.example           # Safe placeholder values — commit this
 ├── .gitignore
 └── package.json
