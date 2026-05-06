@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Managed Service Platform</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f5f5f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.12);
+      padding: 2rem;
+      width: 360px;
+    }
+    h1 { font-size: 1.25rem; margin-bottom: 0.25rem; }
+    p.sub { color: #666; font-size: 0.875rem; margin-bottom: 1.5rem; }
+    button {
+      background: #0070f3;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 0.6rem 1.2rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+      width: 100%;
+    }
+    button:hover { background: #005ec4; }
+    #result {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-family: monospace;
+      white-space: pre-wrap;
+      display: none;
+    }
+    #result.ok    { background: #e6f4ea; color: #1e4d2b; }
+    #result.error { background: #fdecea; color: #611a15; }
+    .endpoints { margin-top: 1.5rem; }
+    .endpoints h2 { font-size: 0.875rem; color: #444; margin-bottom: 0.5rem; }
+    .endpoints ul { list-style: none; }
+    .endpoints li { font-size: 0.8rem; color: #555; padding: 0.2rem 0; font-family: monospace; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Managed Service Platform</h1>
+    <p class="sub">Local development scaffold</p>
+
+    <button id="btn">Check health</button>
+    <pre id="result"></pre>
+
+    <div class="endpoints">
+      <h2>API endpoints</h2>
+      <ul>
+        <li>GET  /api/health</li>
+        <li>GET  /api/clients</li>
+        <li>GET  /api/cases</li>
+        <li>GET  /api/documents</li>
+        <li>GET  /api/tasks</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('btn').addEventListener('click', async () => {
+      const el = document.getElementById('result');
+      el.style.display = 'block';
+      el.className = '';
+      el.textContent = 'Checking…';
+      try {
+        const res = await fetch('/api/health');
+        const data = await res.json();
+        el.className = res.ok ? 'ok' : 'error';
+        el.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        el.className = 'error';
+        el.textContent = 'Could not reach server: ' + err.message;
+      }
+    });
+  </script>
+</body>
+</html>
