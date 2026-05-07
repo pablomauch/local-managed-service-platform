@@ -12,7 +12,8 @@ export default async function handler(req, res) {
         ORDER BY c.created_at DESC
       `);
       return res.json(rows);
-    } catch {
+    } catch (err) {
+      console.error('[/api/cases GET]', err.message);
       return res.status(500).json({ error: 'Error al obtener los casos.' });
     }
   }
@@ -27,7 +28,8 @@ export default async function handler(req, res) {
         [client_id, title.trim(), description?.trim() || null, status || 'abierto', priority || 'media']
       );
       return res.status(201).json(rows[0]);
-    } catch {
+    } catch (err) {
+      console.error('[/api/cases POST]', err.message);
       return res.status(500).json({ error: 'Error al crear el caso.' });
     }
   }

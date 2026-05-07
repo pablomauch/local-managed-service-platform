@@ -12,7 +12,8 @@ export default async function handler(req, res) {
       );
       if (!rows[0]) return res.status(404).json({ error: 'Documento no encontrado.' });
       return res.json(rows[0]);
-    } catch {
+    } catch (err) {
+      console.error('[/api/documents/:id GET]', err.message);
       return res.status(500).json({ error: 'Error al obtener el documento.' });
     }
   }
@@ -28,7 +29,8 @@ export default async function handler(req, res) {
       );
       if (!rows[0]) return res.status(404).json({ error: 'Documento no encontrado.' });
       return res.json(rows[0]);
-    } catch {
+    } catch (err) {
+      console.error('[/api/documents/:id PUT]', err.message);
       return res.status(500).json({ error: 'Error al actualizar el documento.' });
     }
   }

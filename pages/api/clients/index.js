@@ -7,7 +7,8 @@ export default async function handler(req, res) {
     try {
       const { rows } = await pool.query('SELECT * FROM clients ORDER BY created_at DESC');
       return res.json(rows);
-    } catch {
+    } catch (err) {
+      console.error('[/api/clients GET]', err.message);
       return res.status(500).json({ error: 'Error al obtener los clientes.' });
     }
   }
@@ -21,7 +22,8 @@ export default async function handler(req, res) {
         [name.trim(), description?.trim() || null, status || 'activo']
       );
       return res.status(201).json(rows[0]);
-    } catch {
+    } catch (err) {
+      console.error('[/api/clients POST]', err.message);
       return res.status(500).json({ error: 'Error al crear el cliente.' });
     }
   }

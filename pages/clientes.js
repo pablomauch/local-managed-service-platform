@@ -28,9 +28,16 @@ export default function ClientesPage() {
     setCargando(true);
     try {
       const r = await fetch('/api/clients');
-      setClientes(await r.json());
+      if (!r.ok) {
+        const datos = await r.json().catch(() => ({}));
+        setError(datos.error || 'Error al obtener los clientes.');
+        setClientes([]);
+        return;
+      }
+      const datos = await r.json();
+      setClientes(Array.isArray(datos) ? datos : []);
     } catch {
-      setError('No se pudieron cargar los clientes.');
+      setError('No se pudo conectar con el servidor.');
     } finally {
       setCargando(false);
     }

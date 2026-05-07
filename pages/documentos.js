@@ -35,9 +35,16 @@ export default function DocumentosPage() {
     setCargando(true);
     try {
       const r = await fetch('/api/documents');
-      setDocumentos(await r.json());
+      if (!r.ok) {
+        const datos = await r.json().catch(() => ({}));
+        setError(datos.error || 'Error al obtener los documentos.');
+        setDocumentos([]);
+        return;
+      }
+      const datos = await r.json();
+      setDocumentos(Array.isArray(datos) ? datos : []);
     } catch {
-      setError('No se pudieron cargar los documentos.');
+      setError('No se pudo conectar con el servidor.');
     } finally {
       setCargando(false);
     }
@@ -46,7 +53,9 @@ export default function DocumentosPage() {
   async function cargarCasos() {
     try {
       const r = await fetch('/api/cases');
-      setCasos(await r.json());
+      if (!r.ok) return;
+      const datos = await r.json();
+      setCasos(Array.isArray(datos) ? datos : []);
     } catch { /* silencioso */ }
   }
 

@@ -12,7 +12,8 @@ export default async function handler(req, res) {
         ORDER BY d.created_at DESC
       `);
       return res.json(rows);
-    } catch {
+    } catch (err) {
+      console.error('[/api/documents GET]', err.message);
       return res.status(500).json({ error: 'Error al obtener los documentos.' });
     }
   }
@@ -27,7 +28,8 @@ export default async function handler(req, res) {
         [case_id, file_name.trim(), document_type || 'otro', storage_path?.trim() || null, status || 'activo']
       );
       return res.status(201).json(rows[0]);
-    } catch {
+    } catch (err) {
+      console.error('[/api/documents POST]', err.message);
       return res.status(500).json({ error: 'Error al registrar el documento.' });
     }
   }

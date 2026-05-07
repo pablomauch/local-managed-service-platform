@@ -33,9 +33,16 @@ export default function TareasPage() {
     setCargando(true);
     try {
       const r = await fetch('/api/tasks');
-      setTareas(await r.json());
+      if (!r.ok) {
+        const datos = await r.json().catch(() => ({}));
+        setError(datos.error || 'Error al obtener las tareas.');
+        setTareas([]);
+        return;
+      }
+      const datos = await r.json();
+      setTareas(Array.isArray(datos) ? datos : []);
     } catch {
-      setError('No se pudieron cargar las tareas.');
+      setError('No se pudo conectar con el servidor.');
     } finally {
       setCargando(false);
     }
@@ -44,7 +51,9 @@ export default function TareasPage() {
   async function cargarCasos() {
     try {
       const r = await fetch('/api/cases');
-      setCasos(await r.json());
+      if (!r.ok) return;
+      const datos = await r.json();
+      setCasos(Array.isArray(datos) ? datos : []);
     } catch { /* silencioso */ }
   }
 

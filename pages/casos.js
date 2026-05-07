@@ -35,9 +35,16 @@ export default function CasosPage() {
     setCargando(true);
     try {
       const r = await fetch('/api/cases');
-      setCasos(await r.json());
+      if (!r.ok) {
+        const datos = await r.json().catch(() => ({}));
+        setError(datos.error || 'Error al obtener los casos.');
+        setCasos([]);
+        return;
+      }
+      const datos = await r.json();
+      setCasos(Array.isArray(datos) ? datos : []);
     } catch {
-      setError('No se pudieron cargar los casos.');
+      setError('No se pudo conectar con el servidor.');
     } finally {
       setCargando(false);
     }
@@ -46,7 +53,9 @@ export default function CasosPage() {
   async function cargarClientes() {
     try {
       const r = await fetch('/api/clients');
-      setClientes(await r.json());
+      if (!r.ok) return;
+      const datos = await r.json();
+      setClientes(Array.isArray(datos) ? datos : []);
     } catch { /* silencioso */ }
   }
 
