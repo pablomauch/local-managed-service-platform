@@ -1,139 +1,154 @@
-# local-managed-service-platform
+# Plataforma Local de Servicios Gestionados
 
-Local managed service platform prototype — Windows lab scaffold.
+Prototipo local para la gestión de clientes, casos, documentos y tareas.  
+La aplicación corre como un único proceso Next.js en `http://localhost:3000`.
 
-For detailed startup and shutdown procedures see
+Para el procedimiento completo de inicio y apagado ver
 [`docs/local-runbook.md`](docs/local-runbook.md).
 
-## Prerequisites
+---
 
-- [Node.js LTS](https://nodejs.org/) (v20 or later)
-- PostgreSQL installed and available on your PATH
-- Windows PowerShell or Command Prompt
+## Requisitos previos
 
-No Docker. No WSL. No Linux-only tools.
+- [Node.js LTS](https://nodejs.org/) v20 o superior
+- PostgreSQL 18 instalado en `C:\Program Files\PostgreSQL\18`
+- Windows PowerShell o Command Prompt
+
+Sin Docker. Sin WSL. Sin herramientas exclusivas de Linux.
 
 ---
 
-## Architecture
+## Arquitectura
 
-The app runs as a **single Next.js process on `http://localhost:3000`**.
-API routes are served by the same process under `/api`.
-There is no separate backend running on `localhost:4000` or any other port.
+La aplicación es un **único proceso Next.js en `http://localhost:3000`**.  
+No existe un backend separado en otro puerto.
 
-| What | Where |
-|------|-------|
-| Application (UI + API) | `http://localhost:3000` |
-| All API endpoints | `http://localhost:3000/api` |
-| PostgreSQL | local service, started manually with `pg_ctl` |
+| Qué | Dónde |
+|-----|-------|
+| Aplicación completa (UI + API) | `http://localhost:3000` |
+| Endpoints API | `http://localhost:3000/api` |
+| PostgreSQL | proceso local, iniciado manualmente con `pg_ctl` |
 
-PostgreSQL is the only separate local process. It must be running before you
-start the app or run migrations.
-
-See [`docs/architecture.md`](docs/architecture.md) for full architectural notes.
+Ver [`docs/architecture.md`](docs/architecture.md) para detalles completos.
 
 ---
 
-## PostgreSQL: start and stop manually
+## PostgreSQL: iniciar y detener
 
-Replace `C:\pg-data` with the actual path to your PostgreSQL data directory.
+PostgreSQL **no** está configurado como servicio de Windows. Debe iniciarse manualmente.
+
+Reemplazar `C:\dev\pg-data` con la ruta real del directorio de datos de PostgreSQL.
 
 ### PowerShell
 
 ```powershell
-# Start
-pg_ctl start -D "C:\pg-data" -l "C:\pg-data\postgres.log"
+# Iniciar
+pg_ctl start -D "C:\dev\managed-service-platform-data\postgres-data" -l "C:\dev\managed-service-platform-data\postgres-log.txt"
 
-# Stop
-pg_ctl stop -D "C:\pg-data"
+# Detener
+pg_ctl stop -D "C:\dev\managed-service-platform-data\postgres-data"
 ```
 
 ### Command Prompt (CMD)
 
 ```cmd
-:: Start
-pg_ctl start -D "C:\pg-data" -l "C:\pg-data\postgres.log"
+:: Iniciar
+"C:\Program Files\PostgreSQL\18\bin\pg_ctl.exe" start -D "C:\dev\managed-service-platform-data\postgres-data" -l "C:\dev\managed-service-platform-data\postgres-log.txt"
 
-:: Stop
-pg_ctl stop -D "C:\pg-data"
+:: Detener
+"C:\Program Files\PostgreSQL\18\bin\pg_ctl.exe" stop -D "C:\dev\managed-service-platform-data\postgres-data"
 ```
 
 ---
 
-## Quick start (Windows)
+## Inicio rápido (Windows)
 
-### 1. Clone and enter the repository
+### 1. Clonar e instalar
 
 ```powershell
 git clone https://github.com/pablomauch/local-managed-service-platform.git
 cd local-managed-service-platform
-```
-
-### 2. Install dependencies
-
-```powershell
 npm install
 ```
 
-### 3. Create your local environment file
+### 2. Crear el archivo de entorno local
 
 **PowerShell:**
-
 ```powershell
 Copy-Item .env.example .env.local
 ```
 
 **CMD:**
-
 ```cmd
 copy .env.example .env.local
 ```
 
-Open `.env.local` in any text editor and replace `CHANGE_ME` with your actual
-PostgreSQL password. All other defaults match a standard local PostgreSQL install.
+Abrir `.env.local` con cualquier editor de texto y reemplazar `CHANGE_ME` con
+la contraseña real de PostgreSQL.
 
-```
-DATABASE_PASSWORD=your_real_password_here
-DATABASE_URL=postgresql://app_user:your_real_password_here@localhost:5432/managed_service_local
-```
+> **`.env.local` nunca debe commitearse ni subirse a GitHub.**  
+> Contiene credenciales reales. El repositorio es público.  
+> Los datos reales deben quedarse solo en la PC local.
 
-> **`.env.local` must never be committed or uploaded to GitHub.**
-> It is listed in `.gitignore` and will not be staged accidentally.
-> Real passwords must only exist in `.env.local` on your local PC.
+### 3. Iniciar PostgreSQL
 
-### 4. Start PostgreSQL
+Iniciar PostgreSQL con `pg_ctl` antes de continuar (ver sección anterior).
 
-Start PostgreSQL manually with `pg_ctl` (see the section above) before
-continuing. PostgreSQL must be running for migrations and for the app to start.
-
-### 5. Run database migrations
+### 4. Inicializar la base de datos
 
 ```powershell
-npm run db:migrate
+npm run db:init
 ```
 
-Expected output:
+Salida esperada:
 
 ```
-Migration complete.
-Database: localhost:5432/managed_service_local
+OK  clients
+OK  cases
+OK  documents
+OK  tasks
+
+Inicialización completa.
+Base de datos: localhost:5432/managed_service_local
 ```
 
-### 6. Start the development server
+> Si las tablas ya existen, el comando no hace nada (es idempotente).
+
+### 5. Iniciar la aplicación
 
 ```powershell
 npm run dev
 ```
 
-Expected output:
+Salida esperada:
 
 ```
-Server:   http://localhost:3000
-Database: localhost:5432/managed_service_local
+ready - started server on 0.0.0.0:3000, url: http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-Click **Check health** — you should see:
+Abrir [http://localhost:3000](http://localhost:3000) en el navegador.
+
+---
+
+## Módulos disponibles
+
+| URL | Módulo |
+|-----|--------|
+| `http://localhost:3000/` | Inicio — accesos y estado del sistema |
+| `http://localhost:3000/clientes` | CRUD de clientes |
+| `http://localhost:3000/casos` | CRUD de casos |
+| `http://localhost:3000/documentos` | CRUD de documentos |
+| `http://localhost:3000/tareas` | CRUD de tareas |
+
+---
+
+## Verificar el healthcheck
+
+```powershell
+curl http://localhost:3000/api/health
+```
+
+Respuesta esperada:
 
 ```json
 {
@@ -147,104 +162,121 @@ Click **Check health** — you should see:
 
 ---
 
-## Scripts
+## Scripts npm
 
-| Command | Description |
+| Comando | Descripción |
 |---------|-------------|
-| `npm run dev` | Start server with hot reload (nodemon) |
-| `npm run build` | Syntax-check all source files |
-| `npm run db:migrate` | Create or update the database schema |
-| `npm start` | Start server without hot reload |
+| `npm run dev` | Inicia la aplicación en modo desarrollo |
+| `npm run build` | Compila la aplicación para producción |
+| `npm start` | Inicia la aplicación compilada |
+| `npm run db:init` | Crea las tablas de la base de datos (idempotente) |
+| `npm run db:migrate` | Runner de migraciones (alternativo) |
 
 ---
 
-## Environment variables
+## Variables de entorno
 
-All configuration is read from `.env.local` at startup. Never commit `.env.local`.
-See `.env.example` for the full list of supported variables with placeholder values.
+La configuración se lee desde `.env.local` al iniciar. Nunca commitear `.env.local`.  
+Ver `.env.example` para la lista completa con valores de ejemplo.
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `APP_URL` | `http://localhost:3000` | Full URL of the app |
-| `FRONTEND_PORT` | `3000` | Frontend port |
-| `FRONTEND_URL` | `http://localhost:3000` | Frontend URL |
-| `BACKEND_PORT` | `3000` | Backend port (same process as frontend) |
-| `BACKEND_URL` | `http://localhost:3000` | Backend URL (same process as frontend) |
-| `NEXT_PUBLIC_API_URL` | `/api` | API base path used by the frontend |
-| `DATABASE_HOST` | `localhost` | PostgreSQL host |
-| `DATABASE_PORT` | `5432` | PostgreSQL port |
-| `DATABASE_NAME` | — | Database name (required) |
-| `DATABASE_USER` | — | Database user |
-| `DATABASE_PASSWORD` | — | Database password — set in `.env.local` only |
-| `DATABASE_URL` | — | Full connection URL (overrides individual vars) |
-| `LLM_PROVIDER` | `disabled` | AI provider — keep as `disabled` |
-| `ALLOW_EXTERNAL_AI_CALLS` | `false` | Must stay `false` |
-| `ALLOW_EXTERNAL_REQUESTS` | `false` | Must stay `false` |
+| Variable | Valor por defecto | Descripción |
+|----------|-------------------|-------------|
+| `APP_URL` | `http://localhost:3000` | URL completa de la aplicación |
+| `NEXT_PUBLIC_API_URL` | `/api` | Base de las rutas API |
+| `DATABASE_HOST` | `localhost` | Host de PostgreSQL |
+| `DATABASE_PORT` | `5432` | Puerto de PostgreSQL |
+| `DATABASE_NAME` | — | Nombre de la base de datos (requerido) |
+| `DATABASE_USER` | — | Usuario de PostgreSQL |
+| `DATABASE_PASSWORD` | — | Contraseña — solo en `.env.local` |
+| `DATABASE_URL` | — | URL completa (reemplaza las variables individuales) |
+| `LLM_PROVIDER` | `disabled` | Proveedor de IA — mantener en `disabled` |
 
 ---
 
-## API endpoints
+## Endpoints API
 
-All endpoints are served by the single app process at `http://localhost:3000/api`.
+Todos los endpoints son servidos por el proceso Next.js en `http://localhost:3000/api`.
 
-| Method | Path | Description |
+| Método | Ruta | Descripción |
 |--------|------|-------------|
-| GET | `/api/health` | Service health check |
-| GET | `/api/clients` | List all clients |
-| POST | `/api/clients` | Create a client `{ name, email?, phone? }` |
-| GET | `/api/clients/:id` | Get a client |
-| PATCH | `/api/clients/:id` | Update a client |
-| GET | `/api/cases` | List all cases |
-| POST | `/api/cases` | Create a case `{ client_id, title }` |
-| GET | `/api/cases/:id` | Get a case |
-| PATCH | `/api/cases/:id` | Update a case `{ title?, status? }` |
-| GET | `/api/documents` | List all documents |
-| POST | `/api/documents` | Register a document `{ case_id, filename, stored_path }` |
-| GET | `/api/documents/:id` | Get a document |
-| GET | `/api/tasks` | List all tasks |
-| POST | `/api/tasks` | Create a task `{ case_id, title, due_date? }` |
-| GET | `/api/tasks/:id` | Get a task |
-| PATCH | `/api/tasks/:id` | Update a task `{ title?, status?, due_date? }` |
+| GET | `/api/health` | Verificación de estado del sistema |
+| GET | `/api/clients` | Listar clientes |
+| POST | `/api/clients` | Crear cliente |
+| GET | `/api/clients/:id` | Obtener cliente |
+| PUT | `/api/clients/:id` | Actualizar cliente |
+| GET | `/api/cases` | Listar casos |
+| POST | `/api/cases` | Crear caso |
+| GET | `/api/cases/:id` | Obtener caso |
+| PUT | `/api/cases/:id` | Actualizar caso |
+| GET | `/api/documents` | Listar documentos |
+| POST | `/api/documents` | Registrar documento |
+| GET | `/api/documents/:id` | Obtener documento |
+| PUT | `/api/documents/:id` | Actualizar documento |
+| GET | `/api/tasks` | Listar tareas |
+| POST | `/api/tasks` | Crear tarea |
+| GET | `/api/tasks/:id` | Obtener tarea |
+| PUT | `/api/tasks/:id` | Actualizar tarea |
 
 ---
 
-## Data storage
+## Datos y seguridad
 
-All runtime data is stored in PostgreSQL (`managed_service_local` database by
-default). The database runs locally on your PC and is never uploaded anywhere.
-
-> Real client names, case data, and documents must stay only on your local PC.
-> Never push database dumps or exports to GitHub.
+- Todos los datos runtime (filas de PostgreSQL) se almacenan localmente.
+- El repositorio es **público**. Nunca subir `.env.local`, dumps de base de datos
+  ni datos reales a GitHub.
+- Los datos reales de clientes deben quedarse solo en la PC local.
 
 ---
 
-## Project structure
+## Scripts de ayuda (Windows CMD)
+
+| Script | Propósito |
+|--------|-----------|
+| `scripts\start-local.cmd` | Iniciar PostgreSQL y el servidor |
+| `scripts\stop-postgres.cmd` | Detener PostgreSQL |
+| `scripts\check-local.cmd` | Validar el entorno local |
+
+---
+
+## Estructura del proyecto
 
 ```
 local-managed-service-platform/
+├── lib/
+│   └── db.js                 # Pool PostgreSQL singleton (Next.js)
+├── pages/
+│   ├── _app.js               # Layout con navegación
+│   ├── index.js              # Página de inicio
+│   ├── clientes.js           # CRUD clientes
+│   ├── casos.js              # CRUD casos
+│   ├── documentos.js         # CRUD documentos
+│   ├── tareas.js             # CRUD tareas
+│   └── api/
+│       ├── health.js
+│       ├── clients/
+│       ├── cases/
+│       ├── documents/
+│       └── tasks/
+├── styles/
+│   └── globals.css
+├── src/db/
+│   ├── connection.js         # Pool PostgreSQL (scripts)
+│   ├── init.js               # Script db:init
+│   ├── migrate.js            # Script db:migrate
+│   └── schema.js             # Definición de tablas
 ├── scripts/
-│   ├── build.js           # Cross-platform syntax checker
-│   ├── check-local.cmd    # Validate local environment (Node, npm, pg, folder)
-│   ├── start-local.cmd    # Start PostgreSQL then the dev server
-│   └── stop-postgres.cmd  # Stop PostgreSQL
-├── src/
-│   ├── server.js          # Express entry point
-│   ├── db/
-│   │   ├── connection.js  # PostgreSQL pool
-│   │   ├── migrate.js     # Migration runner
-│   │   └── schema.js      # Table definitions
-│   ├── routes/
-│   │   ├── health.js
-│   │   ├── clients.js
-│   │   ├── cases.js
-│   │   ├── documents.js
-│   │   └── tasks.js
-│   └── public/
-│       └── index.html     # Health check UI
+│   ├── check-local.cmd
+│   ├── start-local.cmd
+│   └── stop-postgres.cmd
 ├── docs/
-│   ├── architecture.md    # Architecture notes
-│   └── local-runbook.md   # Startup and shutdown procedure
-├── .env.example           # Safe placeholder values — commit this
-├── .gitignore
+│   ├── architecture.md
+│   ├── backend-guidelines.md
+│   ├── development-rules.md
+│   ├── local-runbook.md
+│   ├── security-rules.md
+│   └── ui-guidelines.md
+├── CLAUDE.md
+├── .env.example
+├── next.config.js
 └── package.json
 ```
