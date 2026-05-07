@@ -97,8 +97,8 @@ export default function DocumentosPage() {
       });
       const datos = await r.json();
       if (!r.ok) { setError(datos.error || 'Error al guardar.'); return; }
-      setExito(editando ? 'Documento actualizado correctamente.' : 'Documento registrado correctamente.');
       cancelar();
+      setExito(editando ? 'Documento actualizado correctamente.' : 'Documento registrado correctamente.');
       cargar();
     } catch {
       setError('Error de conexión. Verifique que la aplicación esté activa.');

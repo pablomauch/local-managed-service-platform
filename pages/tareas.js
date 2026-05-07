@@ -95,8 +95,8 @@ export default function TareasPage() {
       });
       const datos = await r.json();
       if (!r.ok) { setError(datos.error || 'Error al guardar.'); return; }
-      setExito(editando ? 'Tarea actualizada correctamente.' : 'Tarea creada correctamente.');
       cancelar();
+      setExito(editando ? 'Tarea actualizada correctamente.' : 'Tarea creada correctamente.');
       cargar();
     } catch {
       setError('Error de conexión. Verifique que la aplicación esté activa.');

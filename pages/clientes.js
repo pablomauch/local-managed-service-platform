@@ -75,8 +75,8 @@ export default function ClientesPage() {
       });
       const datos = await r.json();
       if (!r.ok) { setError(datos.error || 'Error al guardar.'); return; }
-      setExito(editando ? 'Cliente actualizado correctamente.' : 'Cliente creado correctamente.');
       cancelar();
+      setExito(editando ? 'Cliente actualizado correctamente.' : 'Cliente creado correctamente.');
       cargar();
     } catch {
       setError('Error de conexión. Verifique que la aplicación esté activa.');

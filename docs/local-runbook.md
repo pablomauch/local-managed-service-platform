@@ -152,6 +152,44 @@ El comando es idempotente: si las tablas ya existen no hace cambios.
 
 ---
 
+## Cargar datos de demostración (opcional)
+
+Ejecutar después de `db:init` para poblar la base con datos ficticios:
+
+```cmd
+cd /d C:\dev\managed-service-platform
+npm run db:seed
+```
+
+Salida esperada:
+
+```
+Insertando clientes demo...
+OK  10 clientes
+Insertando casos demo...
+OK  10 casos
+Insertando documentos demo...
+OK  10 documentos
+Insertando tareas demo...
+OK  10 tareas
+
+Carga de datos demo completada.
+Base de datos: localhost:5432/managed_service_local
+
+NOTA: Los datos insertados son ficticios y sirven solo para demostración.
+      No representan personas, empresas ni clientes reales.
+```
+
+El comando es idempotente: si los datos demo ya existen no inserta duplicados.
+
+> **Los datos demo son completamente ficticios.** Nombres como "Cliente Demo 01",
+> "Caso Demo 01", etc. No representan personas, empresas ni clientes reales.  
+> No commitear exportaciones ni dumps de la base de datos.  
+> `.env.local` nunca debe commitearse — contiene credenciales reales.  
+> El repositorio es público.
+
+---
+
 ## Acceder a los módulos CRUD
 
 Con la aplicación corriendo, abrir en el navegador:
@@ -255,3 +293,35 @@ O cambiar `PORT` en `.env.local` a un puerto libre (por ejemplo `3001`).
 Los scripts de ayuda usan la ruta absoluta
 `C:\Program Files\PostgreSQL\18\bin\pg_ctl.exe`.  
 Verificar que PostgreSQL 18 está instalado en esa ruta.
+
+### La UI muestra "Las tablas no existen en la base de datos"
+
+`npm run db:init` no se ha ejecutado aún, o se ejecutó contra una base de datos diferente.
+
+```cmd
+cd /d C:\dev\managed-service-platform
+npm run db:init
+```
+
+### La UI muestra "Error de autenticación con la base de datos"
+
+`DATABASE_PASSWORD` en `.env.local` es incorrecto, o `DATABASE_URL` todavía tiene
+el valor `CHANGE_ME` del template.  
+Editar `.env.local` y corregir la contraseña.
+
+### La UI muestra "No se pudo conectar a la base de datos"
+
+PostgreSQL no está corriendo. Verificar con:
+
+```cmd
+netstat -an | findstr :5432
+```
+
+Si no aparece el puerto, iniciar PostgreSQL (ver Paso 1 del procedimiento de inicio).
+
+### npm run db:seed no inserta datos
+
+Verificar que `npm run db:init` se ejecutó primero.  
+Si los datos demo ya existen, el script no inserta duplicados y muestra:
+`Los datos demo ya existen. No se insertaron duplicados.`  
+Esto es el comportamiento correcto.

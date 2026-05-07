@@ -97,8 +97,8 @@ export default function CasosPage() {
       });
       const datos = await r.json();
       if (!r.ok) { setError(datos.error || 'Error al guardar.'); return; }
-      setExito(editando ? 'Caso actualizado correctamente.' : 'Caso creado correctamente.');
       cancelar();
+      setExito(editando ? 'Caso actualizado correctamente.' : 'Caso creado correctamente.');
       cargar();
     } catch {
       setError('Error de conexión. Verifique que la aplicación esté activa.');

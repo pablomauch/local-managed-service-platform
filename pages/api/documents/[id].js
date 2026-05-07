@@ -1,4 +1,5 @@
 const { getDb } = require('../../../lib/db');
+const { dbErrorMessage } = require('../../../lib/api-error');
 
 export default async function handler(req, res) {
   const pool = getDb();
@@ -14,7 +15,8 @@ export default async function handler(req, res) {
       return res.json(rows[0]);
     } catch (err) {
       console.error('[/api/documents/:id GET]', err.message);
-      return res.status(500).json({ error: 'Error al obtener el documento.' });
+      const msg = dbErrorMessage(err) || 'Error al obtener el documento.';
+      return res.status(500).json({ error: msg });
     }
   }
 
@@ -31,7 +33,8 @@ export default async function handler(req, res) {
       return res.json(rows[0]);
     } catch (err) {
       console.error('[/api/documents/:id PUT]', err.message);
-      return res.status(500).json({ error: 'Error al actualizar el documento.' });
+      const msg = dbErrorMessage(err) || 'Error al actualizar el documento.';
+      return res.status(500).json({ error: msg });
     }
   }
 

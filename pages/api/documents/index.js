@@ -1,4 +1,5 @@
 const { getDb } = require('../../../lib/db');
+const { dbErrorMessage } = require('../../../lib/api-error');
 
 export default async function handler(req, res) {
   const pool = getDb();
@@ -14,7 +15,8 @@ export default async function handler(req, res) {
       return res.json(rows);
     } catch (err) {
       console.error('[/api/documents GET]', err.message);
-      return res.status(500).json({ error: 'Error al obtener los documentos.' });
+      const msg = dbErrorMessage(err) || 'Error al obtener los documentos.';
+      return res.status(500).json({ error: msg });
     }
   }
 
@@ -30,7 +32,8 @@ export default async function handler(req, res) {
       return res.status(201).json(rows[0]);
     } catch (err) {
       console.error('[/api/documents POST]', err.message);
-      return res.status(500).json({ error: 'Error al registrar el documento.' });
+      const msg = dbErrorMessage(err) || 'Error al registrar el documento.';
+      return res.status(500).json({ error: msg });
     }
   }
 

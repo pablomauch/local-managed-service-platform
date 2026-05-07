@@ -114,6 +114,34 @@ Base de datos: localhost:5432/managed_service_local
 
 > Si las tablas ya existen, el comando no hace nada (es idempotente).
 
+### 4b. Cargar datos de demostración (opcional)
+
+```powershell
+npm run db:seed
+```
+
+Salida esperada:
+
+```
+Insertando clientes demo...
+OK  10 clientes
+Insertando casos demo...
+OK  10 casos
+Insertando documentos demo...
+OK  10 documentos
+Insertando tareas demo...
+OK  10 tareas
+
+Carga de datos demo completada.
+Base de datos: localhost:5432/managed_service_local
+```
+
+> **Los datos demo son completamente ficticios.**  
+> No representan personas, empresas ni clientes reales.  
+> Los nombres siguen el patrón "Cliente Demo NN", "Caso Demo NN", etc.  
+> El comando es idempotente: si los datos demo ya existen, no inserta duplicados.  
+> **No commitear la base de datos ni exportaciones de datos al repositorio.**
+
 ### 5. Iniciar la aplicación
 
 ```powershell
@@ -171,6 +199,7 @@ Respuesta esperada:
 | `npm start` | Inicia la aplicación compilada |
 | `npm run db:init` | Crea las tablas de la base de datos (idempotente) |
 | `npm run db:migrate` | Runner de migraciones (alternativo) |
+| `npm run db:seed` | Carga datos de demostración ficticios (idempotente) |
 
 ---
 
@@ -225,6 +254,8 @@ Todos los endpoints son servidos por el proceso Next.js en `http://localhost:300
 - El repositorio es **público**. Nunca subir `.env.local`, dumps de base de datos
   ni datos reales a GitHub.
 - Los datos reales de clientes deben quedarse solo en la PC local.
+- Los datos cargados con `npm run db:seed` son ficticios y solo sirven para demostración.
+- **`.env.local` nunca debe commitearse ni subirse a GitHub.** Contiene credenciales reales.
 
 ---
 
@@ -259,10 +290,14 @@ local-managed-service-platform/
 │       └── tasks/
 ├── styles/
 │   └── globals.css
+├── lib/
+│   ├── db.js                 # Pool PostgreSQL singleton (Next.js)
+│   └── api-error.js          # Mapeo de errores pg a mensajes seguros
 ├── src/db/
-│   ├── connection.js         # Pool PostgreSQL (scripts)
+│   ├── connection.js         # Pool PostgreSQL (scripts standalone)
 │   ├── init.js               # Script db:init
 │   ├── migrate.js            # Script db:migrate
+│   ├── seed.js               # Script db:seed (datos demo)
 │   └── schema.js             # Definición de tablas
 ├── scripts/
 │   ├── check-local.cmd
