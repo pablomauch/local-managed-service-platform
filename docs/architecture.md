@@ -1,107 +1,169 @@
-# Architecture
+# Arquitectura
 
-## Overview
+## Estado actual
 
-This is a minimal local-only scaffold. The full platform is not yet built.
-The purpose of this document is to record the constraints and decisions that
-govern how the platform will be developed.
+Este es un **scaffold mínimo operativo**. La plataforma completa no está
+construida aún. Este documento refleja el estado actual y las decisiones de
+diseño que guiarán el desarrollo futuro.
 
 ---
 
-## Runtime topology
+## Topología de runtime
 
-### Single Next.js process
+### Proceso único Next.js
 
-The application runs as a **single Next.js process on `http://localhost:3000`**.
+La aplicación corre como un **único proceso Next.js en `http://localhost:3000`**.
 
-- The UI and all API routes are served by the same process.
-- API routes are mounted under `/api` (e.g. `http://localhost:3000/api/health`).
-- There is no separate backend process. `BACKEND_URL` and `FRONTEND_URL` both
-  point to `http://localhost:3000`.
-- There is no reverse proxy, container, or service mesh at this stage.
+- La UI y todas las rutas API son servidas por el mismo proceso.
+- Las rutas API están bajo el prefijo `/api`
+  (por ejemplo: `http://localhost:3000/api/health`).
+- No existe un proceso backend separado. `BACKEND_URL` y `FRONTEND_URL`
+  apuntan ambas a `http://localhost:3000`.
+- No hay reverse proxy, contenedor ni service mesh en esta etapa.
 
 ### PostgreSQL
 
-PostgreSQL is the only separate local process.
+PostgreSQL es el único proceso local separado.
 
-- It runs on `localhost:5432` by default.
-- It must be started manually with `pg_ctl` before the app or migrations run.
-- The database name is `managed_service_local`.
-- Connection credentials are read exclusively from environment variables
-  (`DATABASE_*` or `DATABASE_URL`). No credentials are hardcoded in source code.
-- Runtime data (rows, future file references) is stored in the local PostgreSQL
-  instance and never leaves the local machine.
+- Corre en `localhost:5432` por defecto.
+- Se inicia manualmente con `pg_ctl` antes de arrancar la app o ejecutar
+  migraciones.
+- La base de datos se llama `managed_service_local`.
+- Las credenciales de conexión se leen exclusivamente desde variables de
+  entorno (`DATABASE_*` o `DATABASE_URL`).
+- No hay credenciales hardcodeadas en el código fuente.
+- Los datos runtime (filas, referencias a archivos futuros) se almacenan en
+  la instancia PostgreSQL local y nunca salen de la máquina local.
 
-### No Docker, no WSL
+**Instalación:** `C:\Program Files\PostgreSQL\18`
+**Directorio de datos:** `C:\dev\managed-service-platform-data\postgres-data`
+**Log:** `C:\dev\managed-service-platform-data\postgres-log.txt`
 
-The scaffold runs natively on Windows using Node.js and a local PostgreSQL
-installation. Docker and WSL are explicitly out of scope.
+### Sin Docker, sin WSL
 
----
-
-## Environment configuration
-
-- `.env.example` is committed and contains only safe placeholder values.
-  It is safe for a public GitHub repository.
-- `.env.local` is created locally by copying `.env.example` and filling in
-  real values. It is listed in `.gitignore` and must never be committed.
-- Real passwords, client names, and personal data must only ever exist in
-  `.env.local` on the developer's local PC.
+El scaffold corre de forma nativa en Windows usando Node.js y una instalación
+local de PostgreSQL. Docker y WSL están explícitamente fuera de alcance.
 
 ---
 
-## API
+## Configuración de entorno
 
-All API routes are served under the `/api` prefix by the Next.js app.
-The frontend reads `NEXT_PUBLIC_API_URL` (default: `/api`) to construct API
-requests, so no hardcoded URLs appear in client code.
-
-Current routes:
-
-| Prefix | Resource |
-|--------|---------|
-| `/api/health` | Health check |
-| `/api/clients` | Clients |
-| `/api/cases` | Cases |
-| `/api/documents` | Documents |
-| `/api/tasks` | Tasks |
+- `.env.example` está commiteado y contiene únicamente valores de placeholder
+  seguros. Es seguro para un repositorio público.
+- `.env.local` se crea localmente copiando `.env.example` y completando con
+  valores reales. Está en `.gitignore` y nunca debe commitearse.
+- Los passwords, datos reales y datos de clientes deben existir únicamente
+  en `.env.local` en la PC del desarrollador.
 
 ---
 
-## AI
+## Rutas API
 
-AI is disabled by default and must remain disabled for local lab use.
+Todas las rutas API están bajo el prefijo `/api` en la app Next.js.
+El frontend lee `NEXT_PUBLIC_API_URL` (por defecto: `/api`) para construir
+las peticiones, sin URLs hardcodeadas en el código cliente.
 
-| Variable | Value |
+Rutas actuales:
+
+| Prefijo | Recurso |
+|---------|---------|
+| `/api/health` | Estado del sistema |
+| `/api/clients` | Clientes |
+| `/api/cases` | Casos |
+| `/api/documents` | Documentos |
+| `/api/tasks` | Tareas |
+
+---
+
+## Base de datos — esquema actual
+
+| Tabla | Descripción |
+|-------|-------------|
+| `clients` | Clientes de la plataforma |
+| `cases` | Casos asociados a clientes |
+| `documents` | Documentos asociados a casos |
+| `tasks` | Tareas asociadas a casos |
+
+Todos los IDs son `SERIAL PRIMARY KEY`. Los timestamps usan `TIMESTAMPTZ`.
+
+---
+
+## IA
+
+La IA está deshabilitada por defecto y debe permanecer así para uso local.
+
+| Variable | Valor |
 |----------|-------|
 | `LLM_PROVIDER` | `disabled` |
 | `ALLOW_EXTERNAL_AI_CALLS` | `false` |
 | `ALLOW_EXTERNAL_REQUESTS` | `false` |
 
-The app must not call Ollama, OpenAI, or any external AI service unless these
-variables are explicitly changed in a controlled environment.
+La app no llama a Ollama, OpenAI ni ningún servicio externo de IA.
 
 ---
 
-## Public repository safety rules
+## Repositorio público — reglas de seguridad
 
-This repository is public. The following must never be committed:
+El repositorio está en GitHub como repositorio **público**. Por eso:
 
-- `.env.local` or any file containing real passwords
-- Database dumps or exports
-- Client names, case data, or any personally identifiable information
-- Corporate names or internal project names
-- API keys, tokens, or secrets of any kind
+- Nunca se commitea `.env.local` ni ningún archivo con credenciales reales.
+- `.env.example` contiene únicamente placeholders (`CHANGE_ME`, `disabled`).
+- No se incluyen datos de clientes, nombres corporativos ni información personal.
+- No se incluyen volcados de base de datos ni archivos exportados.
+- El código commiteado es genérico y no contiene lógica de negocio específica
+  de ningún cliente.
 
-`.env.example` must always contain only placeholder values (`CHANGE_ME`,
-`disabled`, `false`, local hostnames). It must be safe to read by anyone.
+Ver reglas completas en [`docs/security-rules.md`](security-rules.md).
 
 ---
 
-## Runtime data
+## Datos runtime
 
-All runtime data lives outside the repository:
+Todo dato generado en tiempo de ejecución vive **fuera del repositorio**:
 
-- PostgreSQL rows are stored in the local PostgreSQL data directory.
-- Any future file uploads will be stored in a path outside the repository root.
-- Nothing in the repository directory should change at runtime.
+| Qué | Dónde |
+|-----|-------|
+| Filas PostgreSQL | directorio de datos de PostgreSQL |
+| Futuros archivos subidos | `C:\dev\managed-service-platform-data` |
+| Logs de la aplicación | salida de consola únicamente (por ahora) |
+
+Nada dentro de `C:\dev\managed-service-platform` (el repositorio) cambia en
+tiempo de ejecución.
+
+---
+
+## Directorio del proyecto
+
+```
+local-managed-service-platform/
+├── scripts/
+│   ├── build.js              # Verificador de sintaxis cross-platform
+│   ├── check-local.cmd       # Validar entorno local
+│   ├── start-local.cmd       # Iniciar PostgreSQL y el servidor
+│   └── stop-postgres.cmd     # Detener PostgreSQL
+├── src/
+│   ├── server.js             # Punto de entrada Express (scaffold actual)
+│   ├── db/
+│   │   ├── connection.js     # Pool PostgreSQL
+│   │   ├── migrate.js        # Runner de migraciones
+│   │   └── schema.js         # Definición de tablas
+│   ├── routes/
+│   │   ├── health.js
+│   │   ├── clients.js
+│   │   ├── cases.js
+│   │   ├── documents.js
+│   │   └── tasks.js
+│   └── public/
+│       └── index.html        # UI de healthcheck
+├── docs/
+│   ├── architecture.md       # Este archivo
+│   ├── backend-guidelines.md
+│   ├── development-rules.md
+│   ├── local-runbook.md
+│   ├── security-rules.md
+│   └── ui-guidelines.md
+├── CLAUDE.md                 # Guía permanente para Claude Code
+├── .env.example              # Placeholders seguros — se commitea
+├── .gitignore
+└── package.json
+```
