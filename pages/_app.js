@@ -17,15 +17,17 @@ export default function App({ Component, pageProps }) {
     <>
       <nav className="nav">
         <span className="nav-brand">Plataforma Local</span>
-        {LINKS.map(({ href, label }) => (
-          <Link
-            key={href}
-            href={href}
-            className={`nav-link${router.pathname === href ? ' active' : ''}`}
-          >
-            {label}
-          </Link>
-        ))}
+        <div className="nav-links">
+          {LINKS.map(({ href, label }) => (
+            <Link
+              key={href}
+              href={href}
+              className={`nav-link${router.pathname === href ? ' active' : ''}`}
+            >
+              {label}
+            </Link>
+          ))}
+        </div>
       </nav>
       <Component {...pageProps} />
     </>
