@@ -134,5 +134,11 @@ async function seed() {
 
 seed().catch(err => {
   console.error('\nError durante la carga de datos demo:', err.message);
+  if (err.code === '42P01') {
+    console.error('→ La tabla no existe. Ejecute primero: npm run db:init');
+  } else if (err.code === '42703') {
+    console.error('→ Una columna no existe en la tabla. Ejecute primero: npm run db:init');
+    console.error('  db:init agrega columnas faltantes sin eliminar datos.');
+  }
   process.exit(1);
 });

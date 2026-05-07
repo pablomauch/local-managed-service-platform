@@ -127,9 +127,9 @@ Si `db` es `disconnected`, verificar PostgreSQL (paso 2) y que
 
 ---
 
-## Inicializar la base de datos (primera vez)
+## Inicializar la base de datos
 
-Ejecutar una sola vez, o cuando se reinicie con una base de datos vacía:
+Ejecutar la primera vez y también cuando el esquema cambia:
 
 ```cmd
 cd /d C:\dev\managed-service-platform
@@ -139,16 +139,34 @@ npm run db:init
 Salida esperada:
 
 ```
-OK  clients
-OK  cases
-OK  documents
-OK  tasks
+Verificando y actualizando esquema de base de datos...
 
-Inicialización completa.
+OK  clients
+    → tabla creada o ya existía
+    → columnas faltantes agregadas (si las había)
+    → datos existentes no modificados
+OK  cases
+    ...
+OK  documents
+    ...
+OK  tasks
+    ...
+
+Inicialización completa. No se eliminaron datos.
 Base de datos: localhost:5432/managed_service_local
+Este comando puede ejecutarse múltiples veces de forma segura.
 ```
 
-El comando es idempotente: si las tablas ya existen no hace cambios.
+**Este comando es seguro de ejecutar en cualquier momento:**
+
+- Crea las tablas si no existen.
+- Agrega columnas faltantes con `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`.
+- No elimina datos existentes.
+- No hace `DROP TABLE`.
+- Puede ejecutarse múltiples veces sin efectos secundarios.
+
+Si el esquema cambia (se agregan nuevas columnas), ejecutar `db:init`
+antes de `db:seed` para actualizar el esquema.
 
 ---
 
@@ -324,4 +342,22 @@ Si no aparece el puerto, iniciar PostgreSQL (ver Paso 1 del procedimiento de ini
 Verificar que `npm run db:init` se ejecutó primero.  
 Si los datos demo ya existen, el script no inserta duplicados y muestra:
 `Los datos demo ya existen. No se insertaron duplicados.`  
-Esto es el comportamiento correcto.
+Esto es el comportamiento correcto (idempotente).
+
+### npm run db:seed falla con error de columna o tabla
+
+Si aparece un error sobre columna o tabla inexistente:
+
+```
+Error: column "description" of relation "clients" does not exist
+→ Una columna no existe en la tabla. Ejecute primero: npm run db:init
+```
+
+El esquema de la base de datos no está actualizado. Ejecutar:
+
+```cmd
+npm run db:init
+```
+
+`db:init` agrega las columnas faltantes sin eliminar datos existentes.
+Luego volver a ejecutar `npm run db:seed`.

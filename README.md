@@ -103,16 +103,32 @@ npm run db:init
 Salida esperada:
 
 ```
-OK  clients
-OK  cases
-OK  documents
-OK  tasks
+Verificando y actualizando esquema de base de datos...
 
-Inicialización completa.
+OK  clients
+    → tabla creada o ya existía
+    → columnas faltantes agregadas (si las había)
+    → datos existentes no modificados
+OK  cases
+    ...
+OK  documents
+    ...
+OK  tasks
+    ...
+
+Inicialización completa. No se eliminaron datos.
 Base de datos: localhost:5432/managed_service_local
+Este comando puede ejecutarse múltiples veces de forma segura.
 ```
 
-> Si las tablas ya existen, el comando no hace nada (es idempotente).
+> `db:init` es **completamente seguro de ejecutar múltiples veces**:
+> - Crea las tablas si no existen.
+> - Agrega columnas faltantes con `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`.
+> - **No elimina datos existentes.**
+> - **No hace DROP TABLE.**
+>
+> Si el esquema cambia (se agregan nuevas columnas), ejecutar `db:init`
+> antes de `db:seed` para que el esquema quede actualizado.
 
 ### 4b. Cargar datos de demostración (opcional)
 
@@ -140,6 +156,7 @@ Base de datos: localhost:5432/managed_service_local
 > No representan personas, empresas ni clientes reales.  
 > Los nombres siguen el patrón "Cliente Demo NN", "Caso Demo NN", etc.  
 > El comando es idempotente: si los datos demo ya existen, no inserta duplicados.  
+> Si el esquema cambió, ejecutar `db:init` primero, luego `db:seed`.  
 > **No commitear la base de datos ni exportaciones de datos al repositorio.**
 
 ### 5. Iniciar la aplicación
